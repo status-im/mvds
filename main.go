@@ -130,7 +130,6 @@ func createNode(transport transport.Transport, id state.PeerID, mode node.Mode) 
 		mode,
 		peers.NewMemoryPersistence(),
 		dependency.NewInMemoryTracker(),
-		node.EventualMode,
 		logger,
 	), nil
 }
@@ -157,11 +156,7 @@ func peerID() (id state.PeerID) {
 	return
 }
 
-
-
-
 func groupId() (id state.GroupID) {
 	_, _ = rand.Read(id[:])
 	return id
 }
-

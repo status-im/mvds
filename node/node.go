@@ -29,16 +29,6 @@ const (
 	BatchMode
 )
 
-// ResolutionMode defines how message dependencies should be resolved.
-type ResolutionMode int
-
-const (
-	// EventualMode is non-blocking and will return messages before dependencies are resolved.
-	EventualMode ResolutionMode = iota + 1
-	// ConsistentMode blocks and does not return messages until dependencies have been resolved.
-	ConsistentMode
-)
-
 // CalculateNextEpoch is a function used to calculate the next `SendEpoch` for a given message.
 type CalculateNextEpoch func(count uint64, epoch int64) int64
 
@@ -66,8 +56,7 @@ type Node struct {
 
 	epochPersistence *epochSQLitePersistence
 
-	mode       Mode
-	resolution ResolutionMode
+	mode Mode
 
 	subscription chan protobuf.Message
 
@@ -79,7 +68,6 @@ func NewPersistentNode(
 	st transport.Transport,
 	id state.PeerID,
 	mode Mode,
-	resolution ResolutionMode,
 	nextEpoch CalculateNextEpoch,
 	logger *zap.Logger,
 ) (*Node, error) {
@@ -102,7 +90,6 @@ func NewPersistentNode(
 		dependencies:     dependency.NewPersistentTracker(db),
 		logger:           logger.With(zap.Namespace("mvds")),
 		mode:             mode,
-		resolution:       resolution,
 	}
 	if currentEpoch, err := node.epochPersistence.Get(id); err != nil {
 		return nil, err
@@ -153,7 +140,6 @@ func NewNode(
 	mode Mode,
 	pp peers.Persistence,
 	md dependency.Tracker,
-	resolution ResolutionMode,
 	logger *zap.Logger,
 ) *Node {
 	ctx, cancel := context.WithCancel(context.Background())
@@ -175,7 +161,6 @@ func NewNode(
 		logger:       logger.With(zap.Namespace("mvds")),
 		mode:         mode,
 		dependencies: md,
-		resolution:   resolution,
 	}
 }
 
@@ -583,16 +568,9 @@ func (n *Node) broadcastToGroup(group state.GroupID, sender state.PeerID, msg *p
 	return nil
 }
 
-// @todo I do not think this will work, this needs be some recrusive function
-// @todo add method to select depth of how far we resolve dependencies
-
 func (n *Node) resolve(sender state.PeerID, msg *protobuf.Message) {
-	if n.resolution == EventualMode {
-		n.resolveEventually(sender, msg)
-		return
-	}
-
-	n.resolveConsistently(sender, msg)
+	n.resolveEventually(sender, msg)
+	return
 }
 
 func (n *Node) resolveEventually(sender state.PeerID, msg *protobuf.Message) {
@@ -610,88 +588,6 @@ func (n *Node) resolveEventually(sender state.PeerID, msg *protobuf.Message) {
 
 		group := state.ToGroupID(msg.GroupId)
 		n.insertSyncState(&group, pid, sender, state.REQUEST)
-	}
-
-	n.pushToSub(msg)
-}
-
-func (n *Node) resolveConsistently(sender state.PeerID, msg *protobuf.Message) {
-	id := msg.ID()
-
-	// We push any messages whose parents have now been resolved
-	dependants, err := n.dependencies.Dependants(id)
-	if err != nil {
-		n.logger.Error("error getting dependants",
-			zap.Error(err),
-			zap.String("msg", hex.EncodeToString(id[:4])),
-		)
-	}
-
-	for _, dependant := range dependants {
-		err := n.dependencies.Resolve(dependant, id)
-		if err != nil {
-			n.logger.Error("error marking resolved dependency",
-				zap.Error(err),
-				zap.String("msg", hex.EncodeToString(dependant[:4])),
-				zap.String("dependency", hex.EncodeToString(id[:4])),
-			)
-		}
-
-		resolved, err := n.dependencies.IsResolved(dependant)
-		if err != nil {
-			n.logger.Error("error getting unresolved dependencies",
-				zap.Error(err),
-				zap.String("msg", hex.EncodeToString(dependant[:4])),
-			)
-		}
-
-		if !resolved {
-			continue
-		}
-
-		dmsg, err := n.store.Get(dependant)
-		if err != nil {
-			n.logger.Error("error getting message",
-				zap.Error(err),
-				zap.String("messageID", hex.EncodeToString(dependant[:4])),
-			)
-		}
-
-		if dmsg != nil {
-			n.pushToSub(dmsg)
-		}
-	}
-
-	// @todo add parent dependencies to child, then we can have multiple levels?
-	if msg.Metadata == nil || len(msg.Metadata.Parents) == 0 {
-		n.pushToSub(msg)
-		return
-	}
-
-	hasUnresolvedDependencies := false
-	for _, parent := range msg.Metadata.Parents {
-		pid := state.ToMessageID(parent)
-
-		if has, _ := n.store.Has(pid); has {
-			continue
-		}
-
-		group := state.ToGroupID(msg.GroupId)
-		n.insertSyncState(&group, pid, sender, state.REQUEST)
-		hasUnresolvedDependencies = true
-
-		err := n.dependencies.Add(id, pid)
-		if err != nil {
-			n.logger.Error("error adding dependency",
-				zap.Error(err),
-				zap.String("msg", hex.EncodeToString(id[:4])),
-				zap.String("dependency", hex.EncodeToString(pid[:4])),
-			)
-		}
-	}
-
-	if hasUnresolvedDependencies {
-		return
 	}
 
 	n.pushToSub(msg)
