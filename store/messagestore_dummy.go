@@ -4,8 +4,8 @@ import (
 	"errors"
 	"sync"
 
-	"github.com/vacp2p/mvds/protobuf"
-	"github.com/vacp2p/mvds/state"
+	"github.com/status-im/mvds/protobuf"
+	"github.com/status-im/mvds/state"
 )
 
 type DummyStore struct {

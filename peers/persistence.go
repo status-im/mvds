@@ -1,7 +1,7 @@
 package peers
 
 import (
-	"github.com/vacp2p/mvds/state"
+	"github.com/status-im/mvds/state"
 )
 
 type Persistence interface {

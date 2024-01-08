@@ -4,10 +4,10 @@ import (
 	"github.com/pkg/errors"
 	"strings"
 
-	nodemigrations "github.com/vacp2p/mvds/node/migrations"
-	peersmigrations "github.com/vacp2p/mvds/peers/migrations"
-	statemigrations "github.com/vacp2p/mvds/state/migrations"
-	storemigrations "github.com/vacp2p/mvds/store/migrations"
+	nodemigrations "github.com/status-im/mvds/node/migrations"
+	peersmigrations "github.com/status-im/mvds/peers/migrations"
+	statemigrations "github.com/status-im/mvds/state/migrations"
+	storemigrations "github.com/status-im/mvds/store/migrations"
 )
 
 type getter func(string) ([]byte, error)

@@ -5,11 +5,11 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/suite"
-	"github.com/vacp2p/mvds/node"
-	"github.com/vacp2p/mvds/peers"
-	"github.com/vacp2p/mvds/state"
-	"github.com/vacp2p/mvds/store"
-	"github.com/vacp2p/mvds/transport"
+	"github.com/status-im/mvds/node"
+	"github.com/status-im/mvds/peers"
+	"github.com/status-im/mvds/state"
+	"github.com/status-im/mvds/store"
+	"github.com/status-im/mvds/transport"
 	"go.uber.org/zap"
 )
 

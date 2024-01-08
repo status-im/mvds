@@ -5,8 +5,8 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	"github.com/vacp2p/mvds/persistenceutil"
-	"github.com/vacp2p/mvds/state/migrations"
+	"github.com/status-im/mvds/persistenceutil"
+	"github.com/status-im/mvds/state/migrations"
 )
 
 func TestPersistentSyncState(t *testing.T) {

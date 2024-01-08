@@ -4,10 +4,10 @@ import (
 	"io/ioutil"
 	"testing"
 
-	"github.com/vacp2p/mvds/peers/migrations"
+	"github.com/status-im/mvds/peers/migrations"
 
-	"github.com/vacp2p/mvds/persistenceutil"
-	"github.com/vacp2p/mvds/state"
+	"github.com/status-im/mvds/persistenceutil"
+	"github.com/status-im/mvds/state"
 
 	"github.com/stretchr/testify/require"
 )

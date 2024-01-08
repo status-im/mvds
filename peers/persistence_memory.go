@@ -1,6 +1,6 @@
 package peers
 
-import "github.com/vacp2p/mvds/state"
+import "github.com/status-im/mvds/state"
 
 type MemoryPersistence struct {
 	peers map[state.GroupID][]state.PeerID

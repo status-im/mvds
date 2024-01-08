@@ -4,9 +4,9 @@ import (
 	"database/sql"
 	"errors"
 
-	"github.com/vacp2p/mvds/state"
+	"github.com/status-im/mvds/state"
 
-	"github.com/vacp2p/mvds/protobuf"
+	"github.com/status-im/mvds/protobuf"
 )
 
 var (

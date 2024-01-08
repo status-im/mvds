@@ -5,12 +5,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/vacp2p/mvds/state"
+	"github.com/status-im/mvds/state"
 
 	"github.com/stretchr/testify/require"
-	"github.com/vacp2p/mvds/persistenceutil"
-	"github.com/vacp2p/mvds/protobuf"
-	"github.com/vacp2p/mvds/store/migrations"
+	"github.com/status-im/mvds/persistenceutil"
+	"github.com/status-im/mvds/protobuf"
+	"github.com/status-im/mvds/store/migrations"
 )
 
 func TestPersistentMessageStore(t *testing.T) {

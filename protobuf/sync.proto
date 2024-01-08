@@ -5,7 +5,7 @@ option go_package = "./;protobuf";
 
 message Offer {
   bytes group_id = 1;
-  bytes message_id = 2;
+  repeated bytes message_ids = 2;
 }
 
 message Payload {
@@ -13,7 +13,7 @@ message Payload {
   repeated bytes offers = 5002;
   repeated bytes requests = 5003;
   repeated Message messages = 5004;
-  repeated Offer new_offers = 5005;
+  repeated Offer group_offers = 5005;
 }
 
 message Message {

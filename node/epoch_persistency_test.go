@@ -5,9 +5,9 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	"github.com/vacp2p/mvds/node/migrations"
-	"github.com/vacp2p/mvds/persistenceutil"
-	"github.com/vacp2p/mvds/state"
+	"github.com/status-im/mvds/node/migrations"
+	"github.com/status-im/mvds/persistenceutil"
+	"github.com/status-im/mvds/state"
 )
 
 func TestEpochSQLitePersistence(t *testing.T) {

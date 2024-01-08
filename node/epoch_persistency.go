@@ -3,7 +3,7 @@ package node
 import (
 	"database/sql"
 
-	"github.com/vacp2p/mvds/state"
+	"github.com/status-im/mvds/state"
 )
 
 type epochSQLitePersistence struct {
