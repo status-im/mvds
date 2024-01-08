@@ -1,13 +1,19 @@
 syntax = "proto3";
 
 package mvds;
-option go_package = "protobuf";
+option go_package = "./;protobuf";
+
+message Offer {
+  bytes group_id = 1;
+  bytes message_id = 2;
+}
 
 message Payload {
   repeated bytes acks = 5001;
   repeated bytes offers = 5002;
   repeated bytes requests = 5003;
   repeated Message messages = 5004;
+  repeated Offer new_offers = 5005;
 }
 
 message Message {

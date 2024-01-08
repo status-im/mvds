@@ -1,5 +1,3 @@
-SHELL := /bin/bash
-
 GO111MODULE = on
 
 build:
