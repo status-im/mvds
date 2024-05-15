@@ -10,14 +10,14 @@ import (
 type payloads struct {
 	sync.Mutex
 
-	payloads map[state.PeerID]protobuf.Payload
+	payloads map[state.PeerID]*protobuf.Payload
 }
 
 // @todo check in all the functions below that we aren't duplicating stuff
 
 func newPayloads() payloads {
 	return payloads{
-		payloads: make(map[state.PeerID]protobuf.Payload),
+		payloads: make(map[state.PeerID]*protobuf.Payload),
 	}
 }
 
@@ -67,7 +67,7 @@ func (p *payloads) AddMessages(peer state.PeerID, messages ...*protobuf.Message)
 	p.set(peer, payload)
 }
 
-func (p *payloads) MapAndClear(f func(state.PeerID, protobuf.Payload) error) error {
+func (p *payloads) MapAndClear(f func(state.PeerID, *protobuf.Payload) error) error {
 	p.Lock()
 	defer p.Unlock()
 
@@ -79,14 +79,18 @@ func (p *payloads) MapAndClear(f func(state.PeerID, protobuf.Payload) error) err
 	}
 
 	// TODO: this should only be called upon confirmation that the message has been sent
-	p.payloads = make(map[state.PeerID]protobuf.Payload)
+	p.payloads = make(map[state.PeerID]*protobuf.Payload)
 	return nil
 }
 
-func (p *payloads) get(peer state.PeerID) protobuf.Payload {
-	return p.payloads[peer]
+func (p *payloads) get(peer state.PeerID) *protobuf.Payload {
+	payload := p.payloads[peer]
+	if payload == nil {
+		return &protobuf.Payload{}
+	}
+	return payload
 }
 
-func (p *payloads) set(peer state.PeerID, payload protobuf.Payload) {
+func (p *payloads) set(peer state.PeerID, payload *protobuf.Payload) {
 	p.payloads[peer] = payload
 }
