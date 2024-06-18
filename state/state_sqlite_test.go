@@ -4,9 +4,9 @@ import (
 	"io/ioutil"
 	"testing"
 
-	"github.com/stretchr/testify/require"
 	"github.com/status-im/mvds/persistenceutil"
 	"github.com/status-im/mvds/state/migrations"
+	"github.com/stretchr/testify/require"
 )
 
 func TestPersistentSyncState(t *testing.T) {
@@ -53,4 +53,46 @@ func TestPersistentSyncState(t *testing.T) {
 	// remove non-existing row
 	err = p.Remove(MessageID{0xff}, PeerID{0xff})
 	require.EqualError(t, err, "state not found")
+}
+
+func TestMapStateWithPeerID(t *testing.T) {
+	tmpFile, err := ioutil.TempFile("", "")
+	require.NoError(t, err)
+	db, err := persistenceutil.Open(tmpFile.Name(), "", persistenceutil.MigrationConfig{
+		AssetNames:  migrations.AssetNames(),
+		AssetGetter: migrations.Asset,
+	})
+	require.NoError(t, err)
+	p := NewPersistentSyncState(db)
+
+	stateForOnePeer := State{
+		Type:      MESSAGE,
+		SendCount: 1,
+		SendEpoch: 1,
+		GroupID:   &GroupID{0x01},
+		PeerID:    PeerID{0x01},
+		MessageID: MessageID{0xaa},
+	}
+	err = p.Add(stateForOnePeer)
+	require.NoError(t, err)
+
+	stateWithAnotherPeer := stateForOnePeer
+	stateWithAnotherPeer.PeerID = PeerID{0x02}
+	stateWithAnotherPeer.MessageID = MessageID{0xbb}
+	err = p.Add(stateWithAnotherPeer)
+	require.NoError(t, err)
+
+	peerStates, err := p.AllByPeerID(PeerID{0x01})
+	require.NoError(t, err)
+	require.Equal(t, []State{stateForOnePeer}, peerStates)
+
+	p.MapWithPeerId(PeerID{0x01}, func(state State) State {
+		state.SendEpoch++
+		return state
+	})
+	newState, err := p.AllByPeerID(PeerID{0x01})
+	require.NoError(t, err)
+	expectedNewState := stateForOnePeer
+	expectedNewState.SendEpoch++
+	require.Equal(t, []State{expectedNewState}, newState)
 }
