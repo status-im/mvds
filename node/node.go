@@ -35,8 +35,8 @@ type CalculateNextEpoch func(count uint64, epoch int64) int64
 type EventStatus int
 
 const (
-	ONLINE EventStatus = iota
-	OFFLINE
+	OnlineStatus EventStatus = iota
+	OfflineStatus
 )
 
 const FreshEventPeriod = 10 // seconds
@@ -202,7 +202,7 @@ func (n *Node) Start(duration time.Duration) {
 				n.logger.Info("reset data sync for peer stopped")
 				return
 			case event := <-n.peerStatusChangeEvent:
-				if event.Status == ONLINE && event.EventTime > uint64(time.Now().Unix())-FreshEventPeriod {
+				if event.Status == OnlineStatus && event.EventTime > uint64(time.Now().Unix())-FreshEventPeriod {
 					n.logger.Debug("resetting peer epoch", zap.String("peerID", hex.EncodeToString(event.PeerID[:4])))
 					n.resetPeerEpoch(event.PeerID)
 				}

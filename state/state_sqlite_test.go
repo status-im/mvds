@@ -82,7 +82,16 @@ func TestMapStateWithPeerID(t *testing.T) {
 	err = p.Add(stateWithAnotherPeer)
 	require.NoError(t, err)
 
-	peerStates, err := p.AllByPeerID(PeerID{0x01})
+	state2ForOnePeer := stateForOnePeer
+	state2ForOnePeer.MessageID = MessageID{0xcc}
+	err = p.Add(state2ForOnePeer)
+	require.NoError(t, err)
+
+	peerStates, err := p.QueryByPeerID(PeerID{0x01}, 3)
+	require.NoError(t, err)
+	require.Equal(t, []State{stateForOnePeer, state2ForOnePeer}, peerStates)
+
+	peerStates, err = p.QueryByPeerID(PeerID{0x01}, 1)
 	require.NoError(t, err)
 	require.Equal(t, []State{stateForOnePeer}, peerStates)
 
@@ -90,9 +99,11 @@ func TestMapStateWithPeerID(t *testing.T) {
 		state.SendEpoch++
 		return state
 	})
-	newState, err := p.AllByPeerID(PeerID{0x01})
+	newState, err := p.QueryByPeerID(PeerID{0x01}, 3)
 	require.NoError(t, err)
 	expectedNewState := stateForOnePeer
 	expectedNewState.SendEpoch++
-	require.Equal(t, []State{expectedNewState}, newState)
+	expectedNewState2 := state2ForOnePeer
+	expectedNewState2.SendEpoch++
+	require.Equal(t, []State{expectedNewState, expectedNewState2}, newState)
 }
