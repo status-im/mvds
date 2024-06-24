@@ -7,10 +7,10 @@ import (
 
 	"github.com/status-im/mvds/state"
 
-	"github.com/stretchr/testify/require"
 	"github.com/status-im/mvds/persistenceutil"
 	"github.com/status-im/mvds/protobuf"
 	"github.com/status-im/mvds/store/migrations"
+	"github.com/stretchr/testify/require"
 )
 
 func TestPersistentMessageStore(t *testing.T) {
@@ -32,9 +32,9 @@ func TestPersistentMessageStore(t *testing.T) {
 
 	err = p.Add(&message)
 	require.NoError(t, err)
-	// Adding the same message twice is not allowed.
+	// Adding the same message will be ignored.
 	err = p.Add(&message)
-	require.EqualError(t, err, "UNIQUE constraint failed: mvds_messages.id")
+	require.NoError(t, err)
 	// Verify if saved.
 	exists, err := p.Has(message.ID())
 	require.NoError(t, err)
