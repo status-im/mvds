@@ -107,3 +107,46 @@ func TestMapStateWithPeerID(t *testing.T) {
 	expectedNewState2.SendEpoch++
 	require.Equal(t, []State{expectedNewState, expectedNewState2}, newState)
 }
+
+func TestClearState(t *testing.T) {
+	tmpFile, err := ioutil.TempFile("", "")
+	require.NoError(t, err)
+	db, err := persistenceutil.Open(tmpFile.Name(), "", persistenceutil.MigrationConfig{
+		AssetNames:  migrations.AssetNames(),
+		AssetGetter: migrations.Asset,
+	})
+	require.NoError(t, err)
+	p := NewPersistentSyncState(db)
+
+	state1 := State{
+		Type:      MESSAGE,
+		SendCount: 1,
+		SendEpoch: 1,
+		GroupID:   &GroupID{0x01},
+		PeerID:    PeerID{0x01},
+		MessageID: MessageID{0xaa},
+	}
+	err = p.Add(state1)
+	require.NoError(t, err)
+
+	state2 := state1
+	state2.SendCount = 16
+	state2.MessageID = MessageID{0xbb}
+	err = p.Add(state2)
+	require.NoError(t, err)
+
+	state3 := state1
+	state3.SendCount = 15
+	state3.MessageID = MessageID{0xcc}
+	err = p.Add(state3)
+	require.NoError(t, err)
+
+	peerStates, err := p.QueryByPeerID(PeerID{0x01}, 10)
+	require.NoError(t, err)
+	require.Equal(t, []State{state1, state2, state3}, peerStates)
+
+	p.Clear(15)
+	peerStates, err = p.QueryByPeerID(PeerID{0x01}, 10)
+	require.NoError(t, err)
+	require.Equal(t, []State{state1, state3}, peerStates)
+}
