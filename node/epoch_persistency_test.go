@@ -18,7 +18,7 @@ func TestEpochSQLitePersistence(t *testing.T) {
 		AssetGetter: migrations.Asset,
 	})
 	require.NoError(t, err)
-	p := newEpochSQLitePersistence(db)
+	p := NewEpochSQLitePersistence(db)
 
 	err = p.Set(state.PeerID{0x01}, 1)
 	require.NoError(t, err)
