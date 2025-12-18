@@ -1,6 +1,7 @@
 package transport
 
 import (
+	"context"
 	"errors"
 	math "math/rand"
 	"sync"
@@ -32,8 +33,13 @@ func (t *ChannelTransport) AddOutput(id state.PeerID, c chan<- Packet) {
 	t.out[id] = c
 }
 
-func (t *ChannelTransport) Watch() Packet {
-	return <-t.in
+func (t *ChannelTransport) Watch(ctx context.Context) (*Packet, bool) {
+	select {
+	case <-ctx.Done():
+		return nil, false
+	case p := <-t.in:
+		return &p, true
+	}
 }
 
 func (t *ChannelTransport) Send(sender state.PeerID, peer state.PeerID, payload *protobuf.Payload) error {

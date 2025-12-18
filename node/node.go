@@ -9,6 +9,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"math/rand"
+	"sync"
 	"sync/atomic"
 	"time"
 
@@ -54,6 +55,7 @@ type Node struct {
 	epoch  int64
 	ctx    context.Context
 	cancel context.CancelFunc
+	wg     sync.WaitGroup
 
 	store     store.MessageStore
 	transport transport.Transport
@@ -216,20 +218,26 @@ func (n *Node) CurrentEpoch() int64 {
 
 // Start listens for new messages received by the node and sends out those required every epoch.
 func (n *Node) Start(duration time.Duration) {
+	n.wg.Add(1)
 	go func() {
+		defer n.wg.Done()
 		for {
-			select {
-			case <-n.ctx.Done():
-				n.logger.Info("Watch stopped")
+			p, ok := n.transport.Watch(n.ctx)
+			if !ok {
+				n.logger.Debug("watching transport stopped")
 				return
-			default:
-				p := n.transport.Watch()
-				go n.onPayload(p.Sender, p.Payload)
 			}
+			n.wg.Add(1)
+			go func() {
+				defer n.wg.Done()
+				n.onPayload(p.Sender, p.Payload)
+			}()
 		}
 	}()
 
+	n.wg.Add(1)
 	go func() {
+		defer n.wg.Done()
 		for {
 			select {
 			case <-n.ctx.Done():
@@ -244,14 +252,15 @@ func (n *Node) Start(duration time.Duration) {
 		}
 	}()
 
+	n.wg.Add(1)
 	go func() {
+		defer n.wg.Done()
 		for {
 			select {
 			case <-n.ctx.Done():
 				n.logger.Debug("epoch processing stopped")
 				return
-			default:
-				time.Sleep(duration)
+			case <-time.After(duration):
 				err := n.sendMessages()
 				if err != nil {
 					n.logger.Error("error sending messages.", zap.Error(err))
@@ -277,6 +286,7 @@ func (n *Node) Stop() {
 	n.logger.Info("stopping node")
 	n.Unsubscribe()
 	n.cancel()
+	n.wg.Wait()
 }
 
 // Subscribe subscribes to incoming messages.

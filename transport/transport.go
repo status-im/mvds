@@ -2,6 +2,8 @@
 package transport
 
 import (
+	"context"
+
 	"github.com/status-im/mvds/protobuf"
 	"github.com/status-im/mvds/state"
 )
@@ -13,6 +15,6 @@ type Packet struct {
 
 // Transport defines an interface allowing for agnostic transport implementations.
 type Transport interface {
-	Watch() Packet
+	Watch(ctx context.Context) (*Packet, bool)
 	Send(sender state.PeerID, peer state.PeerID, payload *protobuf.Payload) error
 }
