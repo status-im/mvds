@@ -172,7 +172,7 @@ func NewEphemeralNode(
 		payloads:  newPayloads(),
 		nextEpoch: nextEpoch,
 		epoch:     currentEpoch,
-		logger:    logger.With(zap.Namespace("mvds")),
+		logger:    logger.Named("mvds"),
 		mode:      mode,
 	}
 }
@@ -205,7 +205,7 @@ func NewNode(
 		nextEpoch: nextEpoch,
 		ID:        id,
 		epoch:     currentEpoch,
-		logger:    logger.With(zap.Namespace("mvds")),
+		logger:    logger.Named("mvds"),
 		mode:      mode,
 	}
 }
@@ -233,7 +233,7 @@ func (n *Node) Start(duration time.Duration) {
 		for {
 			select {
 			case <-n.ctx.Done():
-				n.logger.Info("reset data sync for peer stopped")
+				n.logger.Debug("reset data sync for peer stopped")
 				return
 			case event := <-n.peerStatusChangeEvent:
 				if event.Status == OnlineStatus && event.EventTime > uint64(time.Now().Unix())-FreshEventPeriod {
@@ -248,17 +248,17 @@ func (n *Node) Start(duration time.Duration) {
 		for {
 			select {
 			case <-n.ctx.Done():
-				n.logger.Info("Epoch processing stopped")
+				n.logger.Debug("epoch processing stopped")
 				return
 			default:
 				time.Sleep(duration)
 				err := n.sendMessages()
 				if err != nil {
-					n.logger.Error("Error sending messages.", zap.Error(err))
+					n.logger.Error("error sending messages.", zap.Error(err))
 				}
 				err = n.syncState.Clear(MaxSendCount)
 				if err != nil {
-					n.logger.Error("Error clearing sync state.", zap.Error(err))
+					n.logger.Error("error clearing sync state.", zap.Error(err))
 				}
 				atomic.AddInt64(&n.epoch, 1)
 				// When a persistent node is used, the epoch needs to be saved.
@@ -274,7 +274,7 @@ func (n *Node) Start(duration time.Duration) {
 
 // Stop message reading and epoch processing
 func (n *Node) Stop() {
-	n.logger.Info("Stopping node")
+	n.logger.Info("stopping node")
 	n.Unsubscribe()
 	n.cancel()
 }
@@ -393,7 +393,7 @@ func (n *Node) sendMessages() error {
 
 			msg, err := n.store.Get(m)
 			if err != nil {
-				n.logger.Error("Failed to retreive message",
+				n.logger.Error("failed to retreive message",
 					zap.String("messageID", hex.EncodeToString(m[:4])),
 					zap.Error(err),
 				)
